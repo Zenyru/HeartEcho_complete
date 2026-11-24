@@ -1,0 +1,442 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #000;
+}
+.orb-wrap {
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;   /* nothing inside can push the page wider */
+  max-width: 100%;
+}
+
+.orb-number {
+  position: absolute;
+  inset: 0;                /* covers exactly the same box as the orb */
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* centre left-right */
+  justify-content: center; /* centre top-bottom */
+  pointer-events: none;    /* clicks pass through to anything underneath */
+  color: white;
+  line-height: 1;
+}
+
+.bpm-number {
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-weight: 200;
+  line-height: 1;
+  white-space: nowrap;                 /* never wraps or spills out */
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.45);
+}
+
+.orb-number span:last-child {           /* the small "BPM" label */
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.glow-button {
+  /* look */
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  padding: 14px 34px;
+  border-radius: 999px;
+  cursor: pointer;
+
+  /* dark glass inside + glowing gradient edge (two backgrounds, one trick) */
+  border: 1px solid transparent;
+  background:
+    linear-gradient(rgba(12, 6, 30, 0.85), rgba(12, 6, 30, 0.85)) padding-box,
+    linear-gradient(120deg, #ff2de1, #822dff, #3c5aff, #3cd2ff) border-box;
+  background-size: 100% 100%, 300% 300%;
+
+  /* soft glow around it, in the orb's colours */
+  box-shadow:
+    0 0 18px rgba(255, 45, 225, 0.25),
+    0 0 36px rgba(60, 90, 255, 0.2);
+
+  animation: glow-shift 6s ease-in-out infinite, glow-breathe 4s ease-in-out infinite;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+}
+
+.glow-button:hover {
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 24px rgba(255, 45, 225, 0.4),
+    0 0 48px rgba(60, 90, 255, 0.35);
+}
+
+.glow-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.glow-button:focus-visible {
+  outline: 2px solid rgba(60, 210, 255, 0.8);
+  outline-offset: 4px;
+}
+
+.glow-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  animation: none;
+}
+
+/* the edge colours slowly flow around the button */
+@keyframes glow-shift {
+  0%, 100% { background-position: 0 0, 0% 50%; }
+  50%      { background-position: 0 0, 100% 50%; }
+}
+
+/* the glow gently breathes, like the orb */
+@keyframes glow-breathe {
+  0%, 100% { box-shadow: 0 0 18px rgba(255, 45, 225, 0.22), 0 0 36px rgba(60, 90, 255, 0.18); }
+  50%      { box-shadow: 0 0 26px rgba(255, 45, 225, 0.35), 0 0 52px rgba(60, 90, 255, 0.28); }
+}
+
+/* respect people who turn off animations */
+@media (prefers-reduced-motion: reduce) {
+  .glow-button { animation: none; }
+}
+/* =====================================================================
+   NEW: dashboard layout + glass cards
+   ===================================================================== */
+
+/* three columns on big screens (sensors | orb | score), one column on phones */
+.dashboard {
+  width: 100%;
+  max-width: 1240px;
+  padding-top: 72px; /* room for the top bar */
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: center;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+}
+@media (min-width: 1024px) {
+  .dashboard {
+    grid-template-columns: 280px 1fr 280px;
+  }
+}
+
+.side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.center-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* frosted glass card with a thin glowing edge in its accent colour */
+.glass-card {
+  --accent: #822dff;
+  position: relative;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  transition: border-color 0.4s ease, transform 0.4s ease;
+}
+/* a faint glow of the accent colour in the top-left corner */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: -40% auto auto -30%;
+  width: 70%;
+  height: 120%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%);
+  pointer-events: none;
+}
+.glass-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  transform: translateY(-2px);
+}
+
+.card-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  letter-spacing: 0;
+}
+
+/* second button style: see-through with a thin border */
+.ghost-button {
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 13px 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.ghost-button:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* top bar */
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+.pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.logo-heart {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 15px;
+  background: linear-gradient(135deg, #ff2de1, #822dff 55%, #3cd2ff);
+  box-shadow: 0 0 18px rgba(130, 45, 255, 0.55);
+  animation: logo-beat 1.2s ease-in-out infinite;
+}
+@keyframes logo-beat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.12); }
+  24% { transform: scale(1); }
+}
+
+/* stress pop-up: slides down from the top */
+.stress-alert {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px 12px 16px;
+  border-radius: 16px;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  background: rgba(40, 10, 40, 0.75);
+  border: 1px solid rgba(255, 80, 180, 0.4);
+  box-shadow: 0 0 30px rgba(255, 45, 225, 0.25);
+  backdrop-filter: blur(14px);
+  transform: translate(-50%, -20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.5s ease;
+}
+.stress-alert-show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+.stress-alert-ping {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff4f9a;
+}
+.stress-alert-ping::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #ff4f9a;
+  animation: ping 1.2s ease-out infinite;
+}
+@keyframes ping {
+  from { transform: scale(1); opacity: 0.8; }
+  to { transform: scale(3); opacity: 0; }
+}
+
+/* results screen */
+.report-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(2, 3, 10, 0.7);
+  backdrop-filter: blur(10px);
+  animation: fade-in 0.6s ease;
+}
+.report-panel {
+  width: 100%;
+  max-width: 760px;
+  padding: 32px;
+  border-radius: 28px;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  background: linear-gradient(160deg, rgba(30, 20, 60, 0.85), rgba(8, 10, 25, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(130, 45, 255, 0.15);
+  animation: rise-in 0.7s ease;
+}
+.report-stat {
+  --accent: #822dff;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 640px) {
+  .report-panel { padding: 22px; }
+}
+
+/* the breathing technique's name under the countdown */
+.technique-name {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  border: 1px solid transparent;
+  transition: all 0.6s ease;
+}
+/* just changed: a glowing pill */
+.technique-new {
+  color: #fff;
+  border-color: rgba(159, 208, 255, 0.5);
+  background: rgba(159, 208, 255, 0.1);
+  box-shadow: 0 0 16px rgba(159, 208, 255, 0.35);
+}
+
+/* =====================================================================
+   The session card (right side)
+   ===================================================================== */
+.card-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.55);
+}
+/* the round numbers 1 2 3 in "How it works" */
+.step-num {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-right: 10px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 400;
+  background: linear-gradient(135deg, #ff2de1, #3cd2ff);
+}
+.score-number {
+  font-size: 56px;
+  font-weight: 200;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #ff7ae9, #b28cff 50%, #6fe0ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* the 0 → 100 line with a dot on it */
+.score-track {
+  position: relative;
+  height: 6px;
+  margin-top: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffb36b, #b28cff, #5ef0b4); /* tense → calm */
+  opacity: 0.85;
+}
+.score-start {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.score-dot {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.8);
+  transform: translate(-50%, -50%);
+  transition: left 1.2s ease; /* slides smoothly when the score changes */
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff2de1, #822dff, #3cd2ff);
+  transition: width 1s linear;
+}
